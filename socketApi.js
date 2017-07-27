@@ -114,6 +114,7 @@ class socketApi extends EventEmitter {
             let j = JSON.parse(e.data)
             this.functionsCall[j.type](j)
         }
+        
         this.socket.onerror = function (e) {
             console.log("Error creating WebSocket connection to " + address);
             console.log(e);
@@ -198,8 +199,8 @@ class socketApi extends EventEmitter {
         // let frameData = new Buffer(width * height * 4);
         let i = 0, t = 0;
 
-        let data = new Buffer(rgb.length);
-        for (; i < rgb.length; i += 4) {
+        let data = new Buffer(width*height*4);
+        for (; i < data.length; i += 4) {
             data[i] = rgb[t + 2];
             data[i + 1] = rgb[t + 1];
             data[i + 2] = rgb[t];

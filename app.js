@@ -36,6 +36,25 @@ const log = (data) => {
 
 let videoPath = "/home/matyz/Downloads/obama.mp4";
 let outputScreenshotPath = "/home/matyz/dev/photos/other/videos/obama";
+// imageHandler.createScreenShotsFromVideo(videoPath, outputScreenshotPath).then(async () => {
+//     log('obama screeenshot ended')
+//     await delay(5000);
+//     imageHandler.trainForIdentity(address, "obama", outputScreenshotPath).then(async () => {
+//         log("images trained completed");
+//         await delay(3000);
+//         log("start classification")
+//         imageHandler.classifyImages(outputScreenshotPath).then(() => {
+//             log("classification completed")
+//         })
+//     });
+
+// })
+//     .catch(() => {
+//         log('obama failed');
+//     })
+
+
+let streamFolder = '/home/matyz/dev/openface api/photos/bla'
 imageHandler.createScreenShotsFromVideo(videoPath, outputScreenshotPath).then(async () => {
     log('obama screeenshot ended')
     await delay(5000);
@@ -43,8 +62,13 @@ imageHandler.createScreenShotsFromVideo(videoPath, outputScreenshotPath).then(as
         log("images trained completed");
         await delay(3000);
         log("start classification")
-        imageHandler.classify(outputScreenshotPath).then(() => {
-            log("classification completed")
+        imageHandler.createScreenShotsFromStream('udp://234.234.234.234:12345', streamFolder, 5, async (path) => {
+            let fullPath = `${path.folder}/${path.file}`
+            log(`image saved ${fullPath}`)
+            await delay(1000)
+            imageHandler.classifyImages(fullPath).then(() => {
+                log("classification completed")
+            })
         })
     });
 
@@ -52,6 +76,8 @@ imageHandler.createScreenShotsFromVideo(videoPath, outputScreenshotPath).then(as
     .catch(() => {
         log('obama failed');
     })
+
+
 
 
 

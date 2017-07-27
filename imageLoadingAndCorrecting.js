@@ -3,8 +3,8 @@ const sharp = require('sharp');
 const base64Img = require('base64-img');
 const socket = require('./socketApi');
 const async = require('async');
-const ffmpeg =require('fluent-ffmpeg');
-
+const ffmpeg = require('fluent-ffmpeg');
+const { spawn } = require('child_process');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const orientationToRotate = {
     1: 0,
@@ -18,30 +18,66 @@ class imageHandler {
     }
 
 
-async createScreenShotsFromVideo(videoPath,outputPath){
-       return new  Promise((res,rej)=>{
+    async createScreenShotsFromVideo(videoPath, outputPath) {
+        return new Promise((res, rej) => {
 
-        ffmpeg(videoPath)
-        .screenshots({
-            count: 10,
-          filename: 'obamma-at-%s-seconds.jpeg',
-          folder: outputPath,
-          size: '400x300'
+            ffmpeg(videoPath)
+                .screenshots({
+                    count: 10,
+                    filename: 'obamma-at-%s-seconds.jpeg',
+                    folder: outputPath,
+                    size: '400x300'
+                })
+                .on('end', async () => {
+                    await delay(5000);
+                    res();
+                    console.log('Screenshots taken');
+                })
+                .on('progress', () => {
+                    console.log('image saved')
+
+                })
+                .on('error', (err, stdout, stderr) => {
+                    console.log('Cannot process video: ' + err.message);
+                    rej();
+
+                });
+
         })
-        .on('end', async()=> {
-            await delay(5000); 
-            res();    
-            console.log('Screenshots taken');
-          })
-          .on('error', (err, stdout, stderr)=> {
-            console.log('Cannot process video: ' + err.message);
-          rej();
-          
-          });
 
-       }) 
-       
 
+    }
+
+    async createScreenShotsFromStream(streamPath, outputFolder, intervalInSecond, callback) {
+        let lastFrame = -1;
+        var ffmpeg = spawn("ffmpeg", [
+            '-i', `${streamPath}`,
+            '-vf', `scale=400:300,fps=${intervalInSecond}/60 `,
+            `${outputFolder}/img%03d.jpg` // bitrate to 64k
+
+        ]);
+        ffmpeg.on('error', function (err) {
+            console.log(err);
+        })
+        ffmpeg.stderr.on('data', function (data) {
+            console.log('stderr: ' + data);
+
+            let arr = data.toString().split('frame=    ')
+            if (arr.length == 2) {
+                let currentFrame = arr[1].split(' fps=')[0];
+                if (currentFrame > lastFrame) {
+                    currentFrame++;
+                    console.log(currentFrame)
+                    lastFrame = currentFrame;
+                    let PrefImgName = lastFrame>9?'0':'00'
+                    callback({folder:`${outputFolder}`,file:`img${PrefImgName}${lastFrame}.jpg`});
+                }
+            }
+
+        })
+        ffmpeg.on('close', function (code) {
+            console.log('child process exited with code ' + code);
+        });
     }
 
     async  resizeAndStoreImages(inputPath, outputPath, resizeCretieria = { width: 400, height: 300 }) {
@@ -106,12 +142,24 @@ async createScreenShotsFromVideo(videoPath,outputPath){
             });
         })
     }
-    async classify(ImagePath) {
-        await this._sendImages(ImagePath);
+    async classifyImages(ImagesPath) {
+        await this._sendImages(ImagesPath);
         console.log("imagesSentForClassification");
     }
+    async classifyImage(ImagePath) {
+        await this._sendImage(ImagePath);
+        console.log("imageSentForClassification");
+    }
 
-    
+    async _sendImage(filePath) {
+        return new Promise(async (res, rej) => {
+
+            console.log('Processing file ' + file);
+            let img = base64Img.base64Sync(`${ImagePath}/${filePath}`);
+            await delay(1000);
+            socket.sendFrame(img);
+        })
+    }
     async _sendImages(ImagePath) {
 
         return new Promise(async (res, rej) => {
