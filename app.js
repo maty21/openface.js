@@ -54,7 +54,7 @@ let outputScreenshotPath = "/home/matyz/dev/photos/other/videos/obama";
 //     })
 
 
-let streamFolder = '/home/matyz/dev/openface api/photos/bla'
+let streamFolder = '/home/matyz/dev/openface_api/photos/bla'
 imageHandler.createScreenShotsFromVideo(videoPath, outputScreenshotPath).then(async () => {
     log('obama screeenshot ended')
     await delay(5000);
@@ -63,10 +63,11 @@ imageHandler.createScreenShotsFromVideo(videoPath, outputScreenshotPath).then(as
         await delay(3000);
         log("start classification")
         imageHandler.createScreenShotsFromStream('udp://234.234.234.234:12345', streamFolder, 5, async (path) => {
-            let fullPath = `${path.folder}/${path.file}`
+            //    let fullPath = `${path.folder}/${path.file}`
+            let fullPath = path.path;
             log(`image saved ${fullPath}`)
-            await delay(1000)
-            imageHandler.classifyImages(fullPath).then(() => {
+            await delay(10000)
+            imageHandler.classifyImage(fullPath).then(() => {
                 log("classification completed")
             })
         })
@@ -78,7 +79,11 @@ imageHandler.createScreenShotsFromVideo(videoPath, outputScreenshotPath).then(as
     })
 
 
-
+// imageHandler.InitSystem(address).then(() => {
+//     imageHandler.classifyImages(streamFolder).then(() => {
+//         log("classification completed")
+//     })
+// })
 
 
 

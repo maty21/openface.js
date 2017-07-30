@@ -6,6 +6,7 @@ const async = require('async');
 const ffmpeg = require('fluent-ffmpeg');
 const { spawn } = require('child_process');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+const chokidar = require('chokidar');
 const orientationToRotate = {
     1: 0,
     3: 180,
@@ -50,10 +51,22 @@ class imageHandler {
 
     async createScreenShotsFromStream(streamPath, outputFolder, intervalInSecond, callback) {
         let lastFrame = -1;
+
+        await fs.remove(outputFolder)
+        await fs.ensureDir(outputFolder)
+
+        let watcher = chokidar.watch(outputFolder, {
+            ignored: /(^|[\/\\])\../,
+            persistent: true
+        });
+        watcher.on('add', path => {
+            console.log(`$$$$$$$$$$$$$$$$$$$$$$$$$$$$File ${path} has been added`);
+            callback({ path:`${path}` })
+        })
         var ffmpeg = spawn("ffmpeg", [
             '-i', `${streamPath}`,
             '-vf', `scale=400:300,fps=${intervalInSecond}/60 `,
-            `${outputFolder}/img%03d.jpg` // bitrate to 64k
+            `${outputFolder}/img%03d.jpeg` // bitrate to 64k
 
         ]);
         ffmpeg.on('error', function (err) {
@@ -62,15 +75,17 @@ class imageHandler {
         ffmpeg.stderr.on('data', function (data) {
             console.log('stderr: ' + data);
 
-            let arr = data.toString().split('frame=    ')
+            let arr = data.toString().replace(/\s+/, "").split('frame=')
             if (arr.length == 2) {
-                let currentFrame = arr[1].split(' fps=')[0];
+                let currentFrame = arr[1].split('fps=')[0];
                 if (currentFrame > lastFrame) {
                     currentFrame++;
                     console.log(currentFrame)
                     lastFrame = currentFrame;
-                    let PrefImgName = lastFrame>9?'0':'00'
-                    callback({folder:`${outputFolder}`,file:`img${PrefImgName}${lastFrame}.jpg`});
+                    let PrefImgName = lastFrame > 9 ? '0' : '00'
+
+
+                    //   callback({ folder: `${outputFolder}`, file: `img${PrefImgName}${lastFrame}.jpeg` });
                 }
             }
 
@@ -118,7 +133,18 @@ class imageHandler {
             });
         })
     }
-
+    async InitSystem(address) {
+        return new Promise((res, rej) => {
+            socket.init(address, "bla").then(() => {
+                socket.on('ready', async () => {
+                    res()
+                })
+            }).catch(e => {
+                console.log('connection not opened')
+                console.dir(e);
+            });
+        })
+    }
     async  trainForIdentity(address, indentity, ImagePath) {
         return new Promise((res, rej) => {
             socket.init(address, "bla").then(() => {
@@ -154,8 +180,8 @@ class imageHandler {
     async _sendImage(filePath) {
         return new Promise(async (res, rej) => {
 
-            console.log('Processing file ' + file);
-            let img = base64Img.base64Sync(`${ImagePath}/${filePath}`);
+            console.log('Processing file ' + filePath);
+            let img = base64Img.base64Sync(`${filePath}`);
             await delay(1000);
             socket.sendFrame(img);
         })
