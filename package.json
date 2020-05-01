@@ -11,6 +11,12 @@
     "jpeg-js": "^0.3.3",
     "node-base64-image": "^1.0.4",
     "sharp": "^0.18.2",
-    "ws": "^3.0.0"
-  }
+    "ws": "^3.0.0",
+    "snyk": "^1.316.1"
+  },
+  "scripts": {
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
+  },
+  "snyk": true
 }
