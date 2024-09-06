@@ -2,7 +2,7 @@
   "name": "",
   "version": "",
   "dependencies": {
-    "async": "^2.5.0",
+    "async": "^3.0.0",
     "base64-img": "^1.0.3",
     "chokidar": "^1.7.0",
     "fluent-ffmpeg": "^2.1.2",
@@ -10,7 +10,7 @@
     "fs-promise": "^2.0.3",
     "jpeg-js": "^0.3.3",
     "node-base64-image": "^1.0.4",
-    "sharp": "^0.18.2",
+    "sharp": "^0.32.2",
     "ws": "^3.0.0"
   }
 }
